@@ -1,6 +1,6 @@
 # OSM-XML-Importer
 
-Imports a OpenStreetMap XML file into a graph (only ´ways´ of type ´highway´)
+Imports a OpenStreetMap XML file into a graph (only `ways` of type `highway`)
 
 ## Requires
 
