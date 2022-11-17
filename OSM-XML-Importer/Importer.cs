@@ -216,6 +216,14 @@ namespace OSM_XML_Importer
                 }
             }
 
+            foreach(KeyValuePair<ulong, ushort> kv in occuranceCount)
+            {
+                if (kv.Value < 1)
+                    _graph.RemoveNode(kv.Key);
+            }
+
+            _graph.Trim();
+
             _reader.Close();
             GC.Collect();
             return _graph;
