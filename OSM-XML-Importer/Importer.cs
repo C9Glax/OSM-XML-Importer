@@ -203,6 +203,7 @@ namespace OSM_XML_Importer
                                     }
                                     logger?.Log(LogLevel.VERBOSE, "Add Edge: {0} & {1} Weight: {2}", _currentJunction, _n2, _time);
                                     _currentJunction = _n2;
+                                    _distance = 0;
                                 }
                                 else
                                 {
