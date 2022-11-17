@@ -3,8 +3,8 @@
 #pragma warning disable CS8604
 using Logging;
 using System.Xml;
-using Graph;
-using Graph.Utils;
+using GeoGraph;
+using GeoGraph.Utils;
 
 namespace OSM_XML_Importer
 {
@@ -17,7 +17,7 @@ namespace OSM_XML_Importer
             IgnoreComments = true
         };
 
-        public static Graph.Graph Import(string filePath = "", bool onlyJunctions = true, Logger? logger = null)
+        public static Graph Import(string filePath = "", bool onlyJunctions = true, Logger? logger = null)
         {
             /*
              * Count Node occurances when tag is "highway"
@@ -33,7 +33,7 @@ namespace OSM_XML_Importer
              */
             mapData.Position = 0;
             logger?.Log(LogLevel.INFO, "Importing Graph...");
-            Graph.Graph _graph = CreateGraph(mapData, occuranceCount, onlyJunctions, logger);
+            Graph _graph = CreateGraph(mapData, occuranceCount, onlyJunctions, logger);
             logger?.Log(LogLevel.DEBUG, "Loaded Nodes: {0}", _graph.GetNodeCount());
 
             mapData.Close();
@@ -98,9 +98,9 @@ namespace OSM_XML_Importer
             return _occurances;
         }
 
-        private static Graph.Graph CreateGraph(Stream mapData, Dictionary<ulong, ushort> occuranceCount, bool onlyJunctions, Logger? logger = null)
+        private static Graph CreateGraph(Stream mapData, Dictionary<ulong, ushort> occuranceCount, bool onlyJunctions, Logger? logger = null)
         {
-            Graph.Graph _graph = new();
+            Graph _graph = new();
             Way _currentWay;
             Node _n1, _n2, _currentNode;
             float _time, _distance = 0;
