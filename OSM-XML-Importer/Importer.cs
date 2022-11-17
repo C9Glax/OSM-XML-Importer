@@ -4,7 +4,6 @@
 using Logging;
 using System.Xml;
 using GeoGraph;
-using GeoGraph.Utils;
 
 namespace OSM_XML_Importer
 {
@@ -160,7 +159,7 @@ namespace OSM_XML_Importer
                                 _n1 = _graph.GetNode(_currentWay.nodeIds[_nodeIdIndex]);
                                 _n2 = _graph.GetNode(_currentWay.nodeIds[_nodeIdIndex + 1]);
 
-                                _distance = Convert.ToSingle(Utils.DistanceBetweenNodes(_n1, _n2));
+                                _distance = Convert.ToSingle(Utils.DistanceBetween(_n1, _n2));
                                 _time = _distance / _currentWay.GetMaxSpeed();
                                 if (!_currentWay.IsOneWay())
                                 {
@@ -185,7 +184,7 @@ namespace OSM_XML_Importer
                             for(int _nodeIdIndex = 0; _nodeIdIndex < _currentWay.nodeIds.Count - 1; _nodeIdIndex++)
                             {
                                 _n2 = _graph.GetNode(_currentWay.nodeIds[_nodeIdIndex + 1]);
-                                _distance += Convert.ToSingle(Utils.DistanceBetweenNodes(_currentNode, _n2));
+                                _distance += Convert.ToSingle(Utils.DistanceBetween(_currentNode, _n2));
                                 if (occuranceCount[_currentWay.nodeIds[_nodeIdIndex]] > 1 || _nodeIdIndex == _currentWay.nodeIds.Count - 2) //junction found
                                 {
                                     _time = _distance / _currentWay.GetMaxSpeed();
