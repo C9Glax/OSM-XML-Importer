@@ -101,7 +101,7 @@ namespace OSM_XML_Importer
         {
             Graph _graph = new();
             Way _currentWay;
-            Node _n1, _n2, _currentNode;
+            Node _n1, _n2, _currentJunction;
             float _time, _distance = 0;
 
             XmlReader _reader = XmlReader.Create(mapData, readerSettings);
@@ -179,41 +179,42 @@ namespace OSM_XML_Importer
                         }
                         else
                         {
-                            _n1 = _graph.GetNode(_currentWay.nodeIds[0]);
-                            _currentNode = _n1;
-                            for(int _nodeIdIndex = 0; _nodeIdIndex < _currentWay.nodeIds.Count - 1; _nodeIdIndex++)
+                            _currentJunction = _graph.GetNode(_currentWay.nodeIds[0]);
+                            _n1 = _currentJunction;
+                            for(int i = 1; i < _currentWay.nodeIds.Count; i++)
                             {
-                                _n2 = _graph.GetNode(_currentWay.nodeIds[_nodeIdIndex + 1]);
-                                _distance += Convert.ToSingle(Utils.DistanceBetween(_currentNode, _n2));
-                                if (occuranceCount[_currentWay.nodeIds[_nodeIdIndex]] > 1 || _nodeIdIndex == _currentWay.nodeIds.Count - 2) //junction found
+                                _n2 = _graph.GetNode(_currentWay.nodeIds[i]);
+                                _distance += Convert.ToSingle(Utils.DistanceBetween(_n1, _n2));
+
+                                if (occuranceCount[_currentWay.nodeIds[i]] > 1 || i == _currentWay.nodeIds.Count - 1) //Junction or end of way
                                 {
                                     _time = _distance / _currentWay.GetMaxSpeed();
                                     if (!_currentWay.IsOneWay())
                                     {
-                                        _n1.edges.Add(new Edge(_n2, _time, _distance, _currentWay.GetId()));
-                                        _n2.edges.Add(new Edge(_n1, _time, _distance, _currentWay.GetId()));
-                                    }
-                                    else if (_currentWay.IsForward())
+                                        _currentJunction.edges.Add(new Edge(_n2, _time, _distance, _currentWay.GetId()));
+                                        _n2.edges.Add(new Edge(_currentJunction, _time, _distance, _currentWay.GetId()));
+                                    }else if (_currentWay.IsForward())
                                     {
-                                        _n1.edges.Add(new Edge(_n2, _time, _distance, _currentWay.GetId()));
+                                        _currentJunction.edges.Add(new Edge(_n2, _time, _distance, _currentWay.GetId()));
                                     }
                                     else
                                     {
-                                        _n2.edges.Add(new Edge(_n1, _time, _distance, _currentWay.GetId()));
+                                        _n2.edges.Add(new Edge(_currentJunction, _time, _distance, _currentWay.GetId()));
                                     }
-                                    _distance = 0;
-                                    logger?.Log(LogLevel.VERBOSE, "Add Edge: {0} & {1} Weight: {2}", _currentWay.nodeIds[_nodeIdIndex], _currentWay.nodeIds[_nodeIdIndex + 1], _time);
+                                    logger?.Log(LogLevel.VERBOSE, "Add Edge: {0} & {1} Weight: {2}", _currentJunction, _n2, _time);
+                                    _currentJunction = _n2;
                                 }
                                 else
                                 {
-                                    _graph.RemoveNode(_currentWay.nodeIds[_nodeIdIndex]); //Not a junction
+                                    _graph.RemoveNode(_currentWay.nodeIds[i]);
                                 }
-                                _currentNode = _n2;
+                                _n1 = _n2;
                             }
                         }
                     }
                 }
             }
+
             _reader.Close();
             GC.Collect();
             return _graph;
