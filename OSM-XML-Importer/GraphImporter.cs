@@ -98,7 +98,7 @@ namespace OSM_XML_Importer
             Graph _graph = new();
             Way _currentWay;
             Node _n1, _n2, _currentJunction;
-            float _time, _distance = 0;
+            float _distance = 0;
 
             XmlReader _reader = XmlReader.Create(mapData, readerSettings);
             XmlReader _wayReader;
@@ -152,21 +152,20 @@ namespace OSM_XML_Importer
                                 _n2 = _graph.GetNode(_currentWay.nodeIds[_nodeIdIndex + 1]);
 
                                 _distance = Convert.ToSingle(Utils.DistanceBetween(_n1, _n2));
-                                _time = _distance / _currentWay.GetMaxSpeed();
                                 if (!_currentWay.IsOneWay())
                                 {
-                                    _n1.edges.Add(new Edge(_n2, _time, _distance, _currentWay.GetId()));
-                                    _n2.edges.Add(new Edge(_n1, _time, _distance, _currentWay.GetId()));
+                                    _n1.edges.Add(new Edge(_n2, _currentWay, _distance, _currentWay.GetId()));
+                                    _n2.edges.Add(new Edge(_n1, _currentWay, _distance, _currentWay.GetId()));
                                 }
                                 else if (_currentWay.IsForward())
                                 {
-                                    _n1.edges.Add(new Edge(_n2, _time, _distance, _currentWay.GetId()));
+                                    _n1.edges.Add(new Edge(_n2, _currentWay, _distance, _currentWay.GetId()));
                                 }
                                 else
                                 {
-                                    _n2.edges.Add(new Edge(_n1, _time, _distance, _currentWay.GetId()));
+                                    _n2.edges.Add(new Edge(_n1, _currentWay, _distance, _currentWay.GetId()));
                                 }
-                                logger?.Log(LogLevel.VERBOSE, "Add Edge: {0} & {1} Weight: {2}", _currentWay.nodeIds[_nodeIdIndex], _currentWay.nodeIds[_nodeIdIndex + 1], _time);
+                                logger?.Log(LogLevel.VERBOSE, "Add Edge: {0} & {1}", _currentWay.nodeIds[_nodeIdIndex], _currentWay.nodeIds[_nodeIdIndex + 1]);
                             }
                         }
                         else
@@ -180,21 +179,20 @@ namespace OSM_XML_Importer
 
                                 if (occuranceCount[_currentWay.nodeIds[i]] > 1 || i == _currentWay.nodeIds.Count - 1) //Junction or end of way
                                 {
-                                    _time = _distance / _currentWay.GetMaxSpeed();
                                     if (!_currentWay.IsOneWay())
                                     {
-                                        _currentJunction.edges.Add(new Edge(_n2, _time, _distance, _currentWay.GetId()));
-                                        _n2.edges.Add(new Edge(_currentJunction, _time, _distance, _currentWay.GetId()));
+                                        _currentJunction.edges.Add(new Edge(_n2, _currentWay, _distance, _currentWay.GetId()));
+                                        _n2.edges.Add(new Edge(_currentJunction, _currentWay, _distance, _currentWay.GetId()));
                                     }
                                     else if (_currentWay.IsForward())
                                     {
-                                        _currentJunction.edges.Add(new Edge(_n2, _time, _distance, _currentWay.GetId()));
+                                        _currentJunction.edges.Add(new Edge(_n2, _currentWay, _distance, _currentWay.GetId()));
                                     }
                                     else
                                     {
-                                        _n2.edges.Add(new Edge(_currentJunction, _time, _distance, _currentWay.GetId()));
+                                        _n2.edges.Add(new Edge(_currentJunction, _currentWay, _distance, _currentWay.GetId()));
                                     }
-                                    logger?.Log(LogLevel.VERBOSE, "Add Edge: {0} & {1} Weight: {2}", _currentJunction, _n2, _time);
+                                    logger?.Log(LogLevel.VERBOSE, "Add Edge: {0} & {1}", _currentJunction, _n2);
                                     _currentJunction = _n2;
                                     _distance = 0;
                                 }
