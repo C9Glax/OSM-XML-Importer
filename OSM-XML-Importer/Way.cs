@@ -87,10 +87,6 @@ namespace OSM_XML_Importer
                     try
                     {
                         this.tags.Add(key, (type)Enum.Parse(typeof(type), value, true));
-                        if (this.GetMaxSpeed().Equals((int)type.NONE))
-                        {
-                            this.tags["maxspeed"] = (int)this.GetHighwayType();
-                        }
                     }
                     catch (ArgumentException)
                     {
@@ -100,10 +96,7 @@ namespace OSM_XML_Importer
                 case "maxspeed":
                     try
                     {
-                        if (this.tags.ContainsKey("maxspeed"))
-                            this.tags["maxspeed"] = Convert.ToInt32(value);
-                        else
-                            this.tags.Add(key, Convert.ToInt32(value));
+                        this.tags.Add(key, Convert.ToInt32(value));
                     }
                     catch (FormatException)
                     {
