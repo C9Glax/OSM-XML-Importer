@@ -1,6 +1,7 @@
 ﻿#pragma warning disable CS8600, CS8601, CS8602, CS8604, CS8629 //All Attributes have to be present
 using Logging;
 using OSM_Landmarks;
+using System.Linq;
 using System.Xml;
 
 namespace OSM_XML_Importer
@@ -18,7 +19,7 @@ namespace OSM_XML_Importer
         {
             Stream mapData = File.Exists(filePath) ? new FileStream(filePath, FileMode.Open, FileAccess.Read) : new MemoryStream(OSM_Data.map);
 
-            Dictionary<ulong, Address> addresses = new Dictionary<ulong, Address>();
+            Dictionary<ulong, List<Address>> idAddressDict = new Dictionary<ulong, List<Address>>();
             List<Address> ret = new List<Address>();
 
             XmlReader _reader = XmlReader.Create(mapData, readerSettings);
@@ -63,7 +64,17 @@ namespace OSM_XML_Importer
                 }
                 if (currentAddress.street != null)
                 {
-                    addresses.Add((ulong)currentAddress.locationId, currentAddress);
+                    if (idAddressDict.ContainsKey((ulong)currentAddress.locationId))
+                    {
+                        idAddressDict[((ulong)currentAddress.locationId)].Add(currentAddress);
+                    }
+                    else
+                    {
+                        List<Address> addresses1 = new List<Address>();
+                        addresses1.Add(currentAddress);
+                        idAddressDict.Add((ulong)currentAddress.locationId, addresses1);
+                    }
+                        
                 }
             }
 
@@ -104,13 +115,17 @@ namespace OSM_XML_Importer
                             break;
                     }
                 }
-                if (addresses.ContainsKey((ulong)currentAddress.locationId))
+                if (idAddressDict.ContainsKey((ulong)currentAddress.locationId))
                 {
-                    Address mod = addresses[(ulong)currentAddress.locationId];
-                    mod.lat = currentAddress.lat;
-                    mod.lon = currentAddress.lon;
-                    ret.Add(mod);
-                    addresses.Remove((ulong)currentAddress.locationId);
+                    List<Address> addresses = idAddressDict[(ulong)currentAddress.locationId];
+                    for(int i = 0; i < addresses.Count; i++)
+                    {
+                        Address mod = addresses[i];
+                        mod.lat = currentAddress.lat;
+                        mod.lon = currentAddress.lon;
+                        ret.Add(mod);
+                        idAddressDict.Remove((ulong)currentAddress.locationId);
+                    }
                 }
                 else if (currentAddress.street != null)
                 {
