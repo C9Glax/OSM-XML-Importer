@@ -141,7 +141,7 @@ namespace OSM_XML_Importer
                     }
                     _wayReader.Close();
 
-                    if (!_currentWay.GetHighwayType().Equals(Way.type.NONE))
+                    if (!_currentWay.GetHighwayType().Equals(Way.wayType.NONE))
                     {
                         logger?.Log(LogLevel.VERBOSE, "WAY Nodes-count: {0} Type: {1}", _currentWay.nodeIds.Count, _currentWay.GetHighwayType());
                         if (!onlyJunctions)

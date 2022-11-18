@@ -8,71 +8,72 @@ namespace OSM_XML_Importer
         private Dictionary<string, object> tags;
 
 
-        public Dictionary<type, int> speedcar = new() {
-                { type.NONE, 0 },
-                { type.motorway, 110 },
-                { type.trunk, 100 },
-                { type.primary, 80 },
-                { type.secondary, 80 },
-                { type.tertiary, 70 },
-                { type.unclassified, 20 },
-                { type.residential, 10 },
-                { type.motorway_link, 50 },
-                { type.trunk_link, 50 },
-                { type.primary_link, 30 },
-                { type.secondary_link, 25 },
-                { type.tertiary_link, 25 },
-                { type.living_street, 10 },
-                { type.service, 0 },
-                { type.pedestrian, 0 },
-                { type.track, 0 },
-                { type.bus_guideway, 0 },
-                { type.escape, 0 },
-                { type.raceway, 0 },
-                { type.road, 25 },
-                { type.busway, 0 },
-                { type.footway, 0 },
-                { type.bridleway, 0 },
-                { type.steps, 0 },
-                { type.corridor, 0 },
-                { type.path, 0 },
-                { type.cycleway, 0 },
-                { type.construction, 0 }
+        public Dictionary<wayType, int> speedcar = new() {
+                { wayType.NONE, 0 },
+                { wayType.motorway, 110 },
+                { wayType.trunk, 100 },
+                { wayType.primary, 80 },
+                { wayType.secondary, 80 },
+                { wayType.tertiary, 70 },
+                { wayType.unclassified, 20 },
+                { wayType.residential, 10 },
+                { wayType.motorway_link, 50 },
+                { wayType.trunk_link, 50 },
+                { wayType.primary_link, 30 },
+                { wayType.secondary_link, 25 },
+                { wayType.tertiary_link, 25 },
+                { wayType.living_street, 10 },
+                { wayType.service, 0 },
+                { wayType.pedestrian, 0 },
+                { wayType.track, 0 },
+                { wayType.bus_guideway, 0 },
+                { wayType.escape, 0 },
+                { wayType.raceway, 0 },
+                { wayType.road, 25 },
+                { wayType.busway, 0 },
+                { wayType.footway, 0 },
+                { wayType.bridleway, 0 },
+                { wayType.steps, 0 },
+                { wayType.corridor, 0 },
+                { wayType.path, 0 },
+                { wayType.cycleway, 0 },
+                { wayType.construction, 0 }
             };
 
-        public Dictionary<type, int> speedped = new() {
-                { type.NONE, 0 },
-                { type.motorway, 0 },
-                { type.trunk, 0 },
-                { type.primary, 0 },
-                { type.secondary, 0 },
-                { type.tertiary, 0 },
-                { type.unclassified, 1 },
-                { type.residential, 3 },
-                { type.motorway_link, 0 },
-                { type.trunk_link, 0 },
-                { type.primary_link, 0 },
-                { type.secondary_link, 0 },
-                { type.tertiary_link, 0 },
-                { type.living_street, 5 },
-                { type.service, 2 },
-                { type.pedestrian, 5 },
-                { type.track, 0 },
-                { type.bus_guideway, 0 },
-                { type.escape, 0 },
-                { type.raceway, 0 },
-                { type.road, 3 },
-                { type.busway, 0 },
-                { type.footway, 4 },
-                { type.bridleway, 1 },
-                { type.steps, 2 },
-                { type.corridor, 3 },
-                { type.path, 4 },
-                { type.cycleway, 2 },
-                { type.construction, 0 }
+        public Dictionary<wayType, int> speedped = new() {
+                { wayType.NONE, 0 },
+                { wayType.motorway, 0 },
+                { wayType.trunk, 0 },
+                { wayType.primary, 0 },
+                { wayType.secondary, 0 },
+                { wayType.tertiary, 0 },
+                { wayType.unclassified, 1 },
+                { wayType.residential, 3 },
+                { wayType.motorway_link, 0 },
+                { wayType.trunk_link, 0 },
+                { wayType.primary_link, 0 },
+                { wayType.secondary_link, 0 },
+                { wayType.tertiary_link, 0 },
+                { wayType.living_street, 5 },
+                { wayType.service, 2 },
+                { wayType.pedestrian, 5 },
+                { wayType.track, 0 },
+                { wayType.bus_guideway, 0 },
+                { wayType.escape, 0 },
+                { wayType.raceway, 0 },
+                { wayType.road, 3 },
+                { wayType.busway, 0 },
+                { wayType.footway, 4 },
+                { wayType.bridleway, 1 },
+                { wayType.steps, 2 },
+                { wayType.corridor, 3 },
+                { wayType.path, 4 },
+                { wayType.cycleway, 2 },
+                { wayType.construction, 0 }
             };
-        public enum type { NONE, motorway, trunk, primary, secondary, tertiary, unclassified, residential, motorway_link, trunk_link, primary_link, secondary_link, tertiary_link, living_street, service, pedestrian, track, bus_guideway, escape, raceway, road, busway, footway, bridleway, steps, corridor, path, cycleway, construction }
+        public enum wayType { NONE, motorway, trunk, primary, secondary, tertiary, unclassified, residential, motorway_link, trunk_link, primary_link, secondary_link, tertiary_link, living_street, service, pedestrian, track, bus_guideway, escape, raceway, road, busway, footway, bridleway, steps, corridor, path, cycleway, construction }
 
+        public enum speedType { pedestrian, car }
 
         public Way()
         {
@@ -86,11 +87,11 @@ namespace OSM_XML_Importer
                 case "highway":
                     try
                     {
-                        this.tags.Add(key, (type)Enum.Parse(typeof(type), value, true));
+                        this.tags.Add(key, (wayType)Enum.Parse(typeof(wayType), value, true));
                     }
                     catch (ArgumentException)
                     {
-                        this.tags.Add(key, type.NONE);
+                        this.tags.Add(key, wayType.NONE);
                     }
                     break;
                 case "maxspeed":
@@ -131,9 +132,9 @@ namespace OSM_XML_Importer
             return this.tags.ContainsKey("id") ? (ulong)this.tags["id"] : 0;
         }
 
-        public type GetHighwayType()
+        public wayType GetHighwayType()
         {
-            return this.tags.ContainsKey("highway") ? (type)this.tags["highway"] : type.NONE;
+            return this.tags.ContainsKey("highway") ? (wayType)this.tags["highway"] : wayType.NONE;
         }
 
         public bool IsOneWay()
@@ -141,10 +142,23 @@ namespace OSM_XML_Importer
             return this.tags.ContainsKey("oneway") ? (bool)this.tags["oneway"] : false;
         }
 
-        public int GetMaxSpeed()
+        public int GetMaxSpeed(speedType type)
         {
-            return this.tags.ContainsKey("maxspeed") ? (int)this.tags["maxspeed"] : (int)this.GetHighwayType();
-
+            if(type == speedType.car)
+            {
+                if (this.tags.ContainsKey("maxspeed"))
+                {
+                    return (int)this.tags["maxspeed"];
+                }
+                else
+                {
+                    return speedcar[this.GetHighwayType()];
+                }
+            }
+            else
+            {
+                return speedped[this.GetHighwayType()];
+            }
         }
 
         public bool IsForward()
