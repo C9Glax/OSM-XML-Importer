@@ -5,7 +5,7 @@ using System.Xml;
 
 namespace OSM_XML_Importer
 {
-    internal class LandmarksImporter
+    public class LandmarksImporter
     {
         private static XmlReaderSettings readerSettings = new()
         {

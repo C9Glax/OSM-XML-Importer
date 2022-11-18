@@ -6,7 +6,7 @@ using System.Xml;
 namespace OSM_XML_Importer
 {
 
-    internal class GraphImporter
+    public class GraphImporter
     {
         private static XmlReaderSettings readerSettings = new()
         {
