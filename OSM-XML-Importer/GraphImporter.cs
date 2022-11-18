@@ -1,124 +1,18 @@
 ﻿#pragma warning disable CS8600, CS8601, CS8602, CS8604 //All Attributes have to be present
+using GeoGraph;
 using Logging;
 using System.Xml;
-using GeoGraph;
-using OSM_Landmarks;
 
 namespace OSM_XML_Importer
 {
-    public partial class Importer
-    {
 
+    internal class GraphImporter
+    {
         private static XmlReaderSettings readerSettings = new()
         {
             IgnoreWhitespace = true,
             IgnoreComments = true
         };
-
-        public static Landmarks Import(string filePath = "", Logger?logger = null)
-        {
-            Dictionary<ulong, Node> nodes = new();
-
-            List<Address> addresses = new();
-            Address currentAddress;
-            Stream mapData = File.Exists(filePath) ? new FileStream(filePath, FileMode.Open, FileAccess.Read) : new MemoryStream(OSM_Data.map);
-
-            XmlReader reader = XmlReader.Create(mapData, readerSettings);
-            while (reader.ReadToFollowing("node"))
-            {
-                currentAddress = new Address();
-                XmlReader nodeReader = reader.ReadSubtree();
-                currentAddress.locationId = Convert.ToUInt64(reader.GetAttribute("id"));
-                currentAddress.lat = Convert.ToSingle(reader.GetAttribute("lat").Replace('.', ','));
-                currentAddress.lon = Convert.ToSingle(reader.GetAttribute("lon").Replace('.', ','));
-                nodes.Add(currentAddress.locationId, new Node(currentAddress.lat, currentAddress.lon));
-                while (nodeReader.ReadToDescendant("tag"))
-                {
-                    string key = (string)reader.GetAttribute("k");
-                    string value = (string)reader.GetAttribute("v");
-                    switch (key)
-                    {
-                        case "addr:street":
-                        case "addr:conscriptionnumber":
-                        case "addr:place":
-                            currentAddress.street = value;
-                            break;
-                        case "addr:housenumber":
-                        case "addr:housename":
-                        case "addr:flats":
-                            currentAddress.house = value;
-                            break;
-                        case "addr:postcode":
-                            currentAddress.zipCode = value;
-                            break;
-                        case "addr:city":
-                            currentAddress.city = value;
-                            break;
-                        case "addr:country":
-                            currentAddress.country = value;
-                            break;
-                    }
-                }
-                if (currentAddress.street != null)
-                {
-                    addresses.Add(currentAddress);
-                }
-            }
-
-            mapData.Position = 0;
-            reader = XmlReader.Create(mapData, readerSettings);
-            while (reader.ReadToFollowing("way"))
-            {
-                currentAddress = new Address();
-                XmlReader wayReader = reader.ReadSubtree();
-                while (wayReader.Read())
-                {
-                    if (wayReader.Name == "nd")
-                    {
-                        ulong id = Convert.ToUInt64(wayReader.GetAttribute("ref"));
-                        if (nodes.ContainsKey(id))
-                        {
-                            currentAddress.locationId = id;
-                            currentAddress.lat = nodes[id].lat;
-                            currentAddress.lon = nodes[id].lon;
-                        }
-                    }
-                    else if (wayReader.Name == "tag")
-                    {
-                        string key = (string)reader.GetAttribute("k");
-                        string value = (string)reader.GetAttribute("v");
-                        switch (key)
-                        {
-                            case "addr:street":
-                            case "addr:conscriptionnumber":
-                            case "addr:place":
-                                currentAddress.street = value;
-                                break;
-                            case "addr:housenumber":
-                            case "addr:housename":
-                            case "addr:flats":
-                                currentAddress.house = value;
-                                break;
-                            case "addr:postcode":
-                                currentAddress.zipCode = value;
-                                break;
-                            case "addr:city":
-                                currentAddress.city = value;
-                                break;
-                            case "addr:country":
-                                currentAddress.country = value;
-                                break;
-                        }
-                    }
-                }
-                if (currentAddress.street != null)
-                {
-                    addresses.Add(currentAddress);
-                }
-            }
-            return new Landmarks(addresses);
-        }
-
         public static Graph Import(string filePath = "", bool onlyJunctions = true, Logger? logger = null)
         {
             /*
@@ -173,7 +67,7 @@ namespace OSM_XML_Importer
                         }
                         catch (ArgumentException) { };*/
                     }
-                    else if(_reader.Name == "nd")
+                    else if (_reader.Name == "nd")
                     {
                         try
                         {
@@ -185,7 +79,7 @@ namespace OSM_XML_Importer
                 }
                 if (_isHighway)
                 {
-                    foreach(ulong _id in _currentIds)
+                    foreach (ulong _id in _currentIds)
                     {
                         if (!_occurances.TryAdd(_id, 1))
                             _occurances[_id]++;
@@ -212,7 +106,7 @@ namespace OSM_XML_Importer
 
             while (_reader.Read())
             {
-                if(_reader.Name == "node")
+                if (_reader.Name == "node")
                 {
                     ulong id = Convert.ToUInt64(_reader.GetAttribute("id"));
                     if (occuranceCount.ContainsKey(id))
@@ -223,7 +117,7 @@ namespace OSM_XML_Importer
                         logger?.Log(LogLevel.VERBOSE, "NODE {0} {1} {2} {3}", id, lat, lon, occuranceCount[id]);
                     }
                 }
-                else if(_reader.Name == "way")
+                else if (_reader.Name == "way")
                 {
                     _wayReader = _reader.ReadSubtree();
                     _currentWay = new();
@@ -279,7 +173,7 @@ namespace OSM_XML_Importer
                         {
                             _currentJunction = _graph.GetNode(_currentWay.nodeIds[0]);
                             _n1 = _currentJunction;
-                            for(int i = 1; i < _currentWay.nodeIds.Count; i++)
+                            for (int i = 1; i < _currentWay.nodeIds.Count; i++)
                             {
                                 _n2 = _graph.GetNode(_currentWay.nodeIds[i]);
                                 _distance += Convert.ToSingle(Utils.DistanceBetween(_n1, _n2));
@@ -291,7 +185,8 @@ namespace OSM_XML_Importer
                                     {
                                         _currentJunction.edges.Add(new Edge(_n2, _time, _distance, _currentWay.GetId()));
                                         _n2.edges.Add(new Edge(_currentJunction, _time, _distance, _currentWay.GetId()));
-                                    }else if (_currentWay.IsForward())
+                                    }
+                                    else if (_currentWay.IsForward())
                                     {
                                         _currentJunction.edges.Add(new Edge(_n2, _time, _distance, _currentWay.GetId()));
                                     }
@@ -314,7 +209,7 @@ namespace OSM_XML_Importer
                 }
             }
 
-            foreach(KeyValuePair<ulong, ushort> kv in occuranceCount)
+            foreach (KeyValuePair<ulong, ushort> kv in occuranceCount)
             {
                 if (kv.Value < 1)
                     _graph.RemoveNode(kv.Key);
@@ -326,6 +221,5 @@ namespace OSM_XML_Importer
             GC.Collect();
             return _graph;
         }
-        
     }
 }

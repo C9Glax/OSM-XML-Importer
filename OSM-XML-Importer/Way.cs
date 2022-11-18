@@ -2,15 +2,13 @@
 
 namespace OSM_XML_Importer
 {
-    partial class Importer
+    struct Way
     {
-        internal struct Way
-        {
-            public List<ulong> nodeIds;
-            private Dictionary<string, object> tags;
+        public List<ulong> nodeIds;
+        private Dictionary<string, object> tags;
 
 
-            public Dictionary<type, int> speed = new() {
+        public Dictionary<type, int> speed = new() {
                 { type.NONE, 1 },
                 { type.motorway, 130 },
                 { type.trunk, 125 },
@@ -41,93 +39,92 @@ namespace OSM_XML_Importer
                 { type.cycleway, 5 },
                 { type.construction, 1 }
             };
-            public enum type { NONE, motorway, trunk, primary, secondary, tertiary, unclassified, residential, motorway_link, trunk_link, primary_link, secondary_link, tertiary_link, living_street, service, pedestrian, track, bus_guideway, escape, raceway, road, busway, footway, bridleway, steps, corridor, path, cycleway, construction }
+        public enum type { NONE, motorway, trunk, primary, secondary, tertiary, unclassified, residential, motorway_link, trunk_link, primary_link, secondary_link, tertiary_link, living_street, service, pedestrian, track, bus_guideway, escape, raceway, road, busway, footway, bridleway, steps, corridor, path, cycleway, construction }
 
 
-            public Way()
+        public Way()
+        {
+            this.nodeIds = new List<ulong>();
+            this.tags = new();
+        }
+        public void AddTag(string key, string value, Logger? logger = null)
+        {
+            switch (key)
             {
-                this.nodeIds = new List<ulong>();
-                this.tags = new();
-            }
-            public void AddTag(string key, string value, Logger? logger = null)
-            {
-                switch (key)
-                {
-                    case "highway":
-                        try
+                case "highway":
+                    try
+                    {
+                        this.tags.Add(key, (type)Enum.Parse(typeof(type), value, true));
+                        if (this.GetMaxSpeed().Equals((int)type.NONE))
                         {
-                            this.tags.Add(key, (type)Enum.Parse(typeof(type), value, true));
-                            if (this.GetMaxSpeed().Equals((int)type.NONE))
-                            {
-                                this.tags["maxspeed"] = (int)this.GetHighwayType();
-                            }
+                            this.tags["maxspeed"] = (int)this.GetHighwayType();
                         }
-                        catch (ArgumentException)
-                        {
-                            this.tags.Add(key, type.NONE);
-                        }
-                        break;
-                    case "maxspeed":
-                        try
-                        {
-                            if (this.tags.ContainsKey("maxspeed"))
-                                this.tags["maxspeed"] = Convert.ToInt32(value);
-                            else
-                                this.tags.Add(key, Convert.ToInt32(value));
-                        }
-                        catch (FormatException)
-                        {
-                            this.tags.Add(key, (int)this.GetHighwayType());
-                        }
-                        break;
-                    case "oneway":
-                        switch (value)
-                        {
-                            case "yes":
-                                this.tags.Add(key, true);
-                                break;
-                            case "-1":
-                                this.tags.Add("forward", false);
-                                break;
-                            case "no":
-                                this.tags.Add(key, false);
-                                break;
-                        }
-                        break;
-                    case "id":
-                        this.tags.Add(key, Convert.ToUInt64(value));
-                        break;
-                    default:
-                        logger?.Log(LogLevel.VERBOSE, "Tag {0} - {1} was not added.", key, value);
-                        break;
-                }
+                    }
+                    catch (ArgumentException)
+                    {
+                        this.tags.Add(key, type.NONE);
+                    }
+                    break;
+                case "maxspeed":
+                    try
+                    {
+                        if (this.tags.ContainsKey("maxspeed"))
+                            this.tags["maxspeed"] = Convert.ToInt32(value);
+                        else
+                            this.tags.Add(key, Convert.ToInt32(value));
+                    }
+                    catch (FormatException)
+                    {
+                        this.tags.Add(key, (int)this.GetHighwayType());
+                    }
+                    break;
+                case "oneway":
+                    switch (value)
+                    {
+                        case "yes":
+                            this.tags.Add(key, true);
+                            break;
+                        case "-1":
+                            this.tags.Add("forward", false);
+                            break;
+                        case "no":
+                            this.tags.Add(key, false);
+                            break;
+                    }
+                    break;
+                case "id":
+                    this.tags.Add(key, Convert.ToUInt64(value));
+                    break;
+                default:
+                    logger?.Log(LogLevel.VERBOSE, "Tag {0} - {1} was not added.", key, value);
+                    break;
             }
+        }
 
-            public ulong GetId()
-            {
-                return this.tags.ContainsKey("id") ? (ulong)this.tags["id"] : 0;
-            }
+        public ulong GetId()
+        {
+            return this.tags.ContainsKey("id") ? (ulong)this.tags["id"] : 0;
+        }
 
-            public type GetHighwayType()
-            {
-                return this.tags.ContainsKey("highway") ? (type)this.tags["highway"] : type.NONE;
-            }
+        public type GetHighwayType()
+        {
+            return this.tags.ContainsKey("highway") ? (type)this.tags["highway"] : type.NONE;
+        }
 
-            public bool IsOneWay()
-            {
-                return this.tags.ContainsKey("oneway") ? (bool)this.tags["oneway"] : false;
-            }
+        public bool IsOneWay()
+        {
+            return this.tags.ContainsKey("oneway") ? (bool)this.tags["oneway"] : false;
+        }
 
-            public int GetMaxSpeed()
-            {
-                return this.tags.ContainsKey("maxspeed") ? (int)this.tags["maxspeed"] : (int)this.GetHighwayType();
+        public int GetMaxSpeed()
+        {
+            return this.tags.ContainsKey("maxspeed") ? (int)this.tags["maxspeed"] : (int)this.GetHighwayType();
 
-            }
+        }
 
-            public bool IsForward()
-            {
-                return this.tags.ContainsKey("forward") ? (bool)this.tags["forward"] : true;
-            }
+        public bool IsForward()
+        {
+            return this.tags.ContainsKey("forward") ? (bool)this.tags["forward"] : true;
         }
     }
 }
