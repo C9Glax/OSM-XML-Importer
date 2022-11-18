@@ -29,8 +29,8 @@ namespace OSM_XML_Importer
                 currentAddress = new Address();
                 XmlReader nodeReader = reader.ReadSubtree();
                 currentAddress.locationId = Convert.ToUInt64(reader.GetAttribute("id"));
-                currentAddress.lat = Convert.ToSingle(reader.GetAttribute("lat"));
-                currentAddress.lon = Convert.ToSingle(reader.GetAttribute("lon"));
+                currentAddress.lat = Convert.ToSingle(reader.GetAttribute("lat").Replace('.', ','));
+                currentAddress.lon = Convert.ToSingle(reader.GetAttribute("lon").Replace('.', ','));
                 nodes.Add(currentAddress.locationId, new Node(currentAddress.lat, currentAddress.lon));
                 while (nodeReader.ReadToDescendant("tag"))
                 {
