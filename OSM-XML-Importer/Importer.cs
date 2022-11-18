@@ -138,10 +138,6 @@ namespace OSM_XML_Importer
             Graph _graph = CreateGraph(mapData, occuranceCount, onlyJunctions, logger);
             logger?.Log(LogLevel.DEBUG, "Loaded Nodes: {0}", _graph.GetNodeCount());
 
-            mapData.Close();
-            occuranceCount.Clear();
-            GC.Collect();
-
             return _graph;
         }
 
@@ -166,13 +162,16 @@ namespace OSM_XML_Importer
                 {
                     if (_reader.Name == "tag" && _reader.GetAttribute("k").Equals("highway"))
                     {
+                        _isHighway = true;
+                        logger?.Log(LogLevel.VERBOSE, "Highway: {0}", _reader.GetAttribute("v"));
+                        /*
                         try
                         {
                             if (!Enum.Parse(typeof(Way.type), _reader.GetAttribute("v"), true).Equals(Way.type.NONE))
                                 _isHighway = true;
                             logger?.Log(LogLevel.VERBOSE, "Highway: {0}", _reader.GetAttribute("v"));
                         }
-                        catch (ArgumentException) { };
+                        catch (ArgumentException) { };*/
                     }
                     else if(_reader.Name == "nd")
                     {
@@ -228,26 +227,22 @@ namespace OSM_XML_Importer
                 {
                     _wayReader = _reader.ReadSubtree();
                     _currentWay = new();
+                    _currentWay.AddTag("id", _reader.GetAttribute("id"));
                     logger?.Log(LogLevel.VERBOSE, "WAY: {0}", _reader.GetAttribute("id"));
                     while (_wayReader.Read())
                     {
-                        _wayReader = _reader.ReadSubtree();
-                        _currentWay.AddTag("id", _reader.GetAttribute("id"));
-                        while (_wayReader.Read())
+                        if (_reader.Name == "tag")
                         {
-                            if (_reader.Name == "tag")
-                            {
-                                string _value = _reader.GetAttribute("v");
-                                string _key = _reader.GetAttribute("k");
-                                logger?.Log(LogLevel.VERBOSE, "TAG {0} {1}", _key, _value);
-                                _currentWay.AddTag(_key, _value);
-                            }
-                            else if (_reader.Name == "nd")
-                            {
-                                ulong _id = Convert.ToUInt64(_reader.GetAttribute("ref"));
-                                _currentWay.nodeIds.Add(_id);
-                                logger?.Log(LogLevel.VERBOSE, "node-ref: {0}", _id);
-                            }
+                            string _value = _reader.GetAttribute("v");
+                            string _key = _reader.GetAttribute("k");
+                            logger?.Log(LogLevel.VERBOSE, "TAG {0} {1}", _key, _value);
+                            _currentWay.AddTag(_key, _value);
+                        }
+                        else if (_reader.Name == "nd")
+                        {
+                            ulong _id = Convert.ToUInt64(_reader.GetAttribute("ref"));
+                            _currentWay.nodeIds.Add(_id);
+                            logger?.Log(LogLevel.VERBOSE, "node-ref: {0}", _id);
                         }
                     }
                     _wayReader.Close();
