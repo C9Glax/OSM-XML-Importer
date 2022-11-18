@@ -14,6 +14,9 @@
     <Reference Include="Logging">
       <HintPath>D:\Documents\GitHub\Logging\Logging\bin\Debug\net6.0\Logging.dll</HintPath>
     </Reference>
+    <Reference Include="OSM-Landmarks">
+      <HintPath>..\..\OSM-Landmarks\OSM-Landmarks\bin\Debug\net6.0\OSM-Landmarks.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
   <ItemGroup>
