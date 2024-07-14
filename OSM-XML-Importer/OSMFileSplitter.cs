@@ -89,16 +89,9 @@ public class OSMFileSplitter
 
     private long GetRegionFileStream(string lat, string lon, ref Dictionary<long, FileStream> nodesRegionFileStreams)
     {
-        float flat = float.Parse(lat, NumberStyles.Float, NumberFormatInfo.InvariantInfo);
-        float flon = float.Parse(lon, NumberStyles.Float, NumberFormatInfo.InvariantInfo);
-
-        double latMult = Math.Floor(flat / _regionSize);
-        double lonMult = Math.Floor(flon / _regionSize);
-
-        string r = $"{latMult:00000}{lonMult:00000}".Replace(".", "").Replace(",","");
-        long ret = long.Parse(r);
+        long ret = Util.GetRegionId(lat, lon, _regionSize);
         if(!nodesRegionFileStreams.ContainsKey(ret))
-            nodesRegionFileStreams.Add(ret, new FileStream(Path.Join(NodesDirectory, r), FileMode.Create, FileAccess.Write));
+            nodesRegionFileStreams.Add(ret, new FileStream(Path.Join(NodesDirectory, ret.ToString()), FileMode.Create, FileAccess.Write));
 
         return ret;
     }
