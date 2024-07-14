@@ -259,7 +259,7 @@ public class OSMFileSplitter
                                 continue;
                             string id = split[0];
                             if(nodeIds.Contains(id))
-                                fsn.Write(Encoding.ASCII.GetBytes(line));
+                                fsn.Write(Encoding.ASCII.GetBytes($"{line}\n"));
                             else
                                 _logger?.LogTrace($"Region {regionId} removed Node {id}");
                         }
