@@ -2,7 +2,6 @@
 using System.Text;
 using System.Xml;
 using Microsoft.Extensions.Logging;
-using Half = SystemHalf.Half;
 
 namespace OSM_XML_Importer;
 
@@ -27,9 +26,10 @@ public class OSMFileSplitter
     private string WaysDirectory => Path.Join(_waysDirectory, _regionSize.ToString(), "ways");
     private string _nodesDirectory, _waysDirectory;
     private ILogger? _logger;
-    private Half _regionSize;
+    private float _regionSize;
 
-    public void SplitFileIntoRegions(Half regionSize, string? filePath = null, string? nodesDirectory = null, string? waysDirectory = null, bool filterHighways = false, ILogger? logger = null)
+    public OSMFileSplitter(float regionSize, string? nodesDirectory = null,
+        string? waysDirectory = null, ILogger? logger = null)
     {
         _logger = logger;
         this._nodesDirectory = nodesDirectory ?? Environment.CurrentDirectory;
@@ -37,8 +37,11 @@ public class OSMFileSplitter
 
         this._regionSize = regionSize;
         
+    }
+
+    public void SplitFileIntoRegions(string? filePath = null, bool filterHighways = false, ILogger? logger = null)
+    {
         _logger?.LogInformation($"Input: {filePath} Output-Nodes: {NodesDirectory} Output-Ways: {WaysDirectory}");
-        
         _logger?.LogDebug("Opening File...");
         Stream mapData = filePath is not null && File.Exists(filePath) ? new FileStream(filePath, FileMode.Open, FileAccess.Read) : new MemoryStream(OSM_Data.map);
 
