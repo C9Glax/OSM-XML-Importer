@@ -101,7 +101,7 @@ public class OSMFileSplitter
     
     /*
      * Way-File format
-     * ID-{nodeId,}+-{tagkey|tagvalue,}+\n
+     * ID-{nodeId,}+-{tagkey@tagvalue,}+\n
      */
     private void Ways(Stream mapData, bool filterToHighways = false)
     {
@@ -148,8 +148,8 @@ public class OSMFileSplitter
             if(filterToHighways && !tags.ContainsKey("highway"))
                 continue;//We are filtering all ways that aren't highways
             
-            //ID-{nodeId,}+-{tagkey|tagvalue,}+\n
-            string line = $"{id}-{string.Join(',',nodeIds)}-{string.Join(',', tags.Select(t => $"{t.Key}|{t.Value}"))}\n";
+            //ID-{nodeId,}+-{tagkey@tagvalue,}+\n
+            string line = $"{id}-{string.Join(',',nodeIds)}-{string.Join(',', tags.Select(t => $"{t.Key}@{t.Value}".Replace(",", ";").Replace("-","=")))}\n";
             List<string> regionIds = nodeIds.Select(nId => nodeIdMap[nId]).Distinct().ToList();
             foreach (string regionId in regionIds)
             {
@@ -224,7 +224,7 @@ public class OSMFileSplitter
                         string? line = sr.ReadLine();
                         if(line is null)
                             continue;
-                        //ID-{nodeId,}+-{tagkey|tagvalue,}+\n
+                        //ID-{nodeId,}+-{tagkey@tagvalue,}+\n
                         string[] split = line.Split('-');
                         if(split.Length != 3)
                             continue;
