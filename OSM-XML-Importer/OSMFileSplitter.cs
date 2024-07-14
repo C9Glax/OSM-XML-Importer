@@ -120,8 +120,11 @@ public class OSMFileSplitter
         while (reader.ReadToFollowing("way"))
         {
             string? id = reader.GetAttribute("id");
+            if(id is null)
+                continue;
             List<string> nodeIds = new();
             Dictionary<string, string> tags = new();
+            tags.Add("id", id);
             using (XmlReader wayReader = reader.ReadSubtree())
             {
                 while (wayReader.Read())
