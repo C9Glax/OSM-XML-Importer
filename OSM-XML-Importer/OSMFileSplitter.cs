@@ -92,7 +92,7 @@ public class OSMFileSplitter
 
     private long GetRegionFileStream(string lat, string lon, ref Dictionary<long, FileStream> nodesRegionFileStreams)
     {
-        long ret = Util.GetRegionId(lat, lon, _regionSize);
+        long ret = RegionUtils.GetRegionId(lat, lon, _regionSize);
         if(!nodesRegionFileStreams.ContainsKey(ret))
             nodesRegionFileStreams.Add(ret, new FileStream(Path.Join(NodesDirectory, ret.ToString()), FileMode.Create, FileAccess.Write));
 

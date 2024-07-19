@@ -20,7 +20,7 @@ public static class Program
 
         float lat = 48.793347f;
         float lon = 9.832301f;
-        long regionId = Util.GetRegionId(lat, lon, regionSize);
+        long regionId = RegionUtils.GetRegionId(lat, lon, regionSize);
         Graph g = r.GetRegion(regionId);
         ulong? node = g.ClosestNodeIdToCoordinates(lat, lon);
         Node? n = g.GetNode((ulong)node!);

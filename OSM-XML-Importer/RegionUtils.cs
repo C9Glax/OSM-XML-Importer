@@ -2,7 +2,7 @@
 
 namespace OSM_XML_Importer;
 
-public static class Util
+public static class RegionUtils
 {
     
     public static long GetRegionId(float lat, float lon, float _regionSize)
