@@ -80,21 +80,21 @@ public class RegionLoader
         return ret;
     }
 
-    public long? GetRegionIdNode(ulong nodeId)
+    public long? GetRegionIdFromNodeId(ulong nodeId)
     {
         if (!_nodesMap.ContainsKey(nodeId))
             return null;
         return long.Parse(_nodesMap[nodeId]);
     }
 
-    public Graph.Graph? GetRegionNode(ulong nodeId)
+    public Graph.Graph? GetRegionFromNodeId(ulong nodeId)
     {
-        long? regionId = GetRegionIdNode(nodeId);
+        long? regionId = GetRegionIdFromNodeId(nodeId);
         if (regionId is null) return null;
         return GetRegion((long)regionId);
     }
 
-    public long[]? GetRegionIdsWay(ulong wayId)
+    public long[]? GetRegionIdsFromWayId(ulong wayId)
     {
         if (!_waysMap.ContainsKey(wayId))
             return null;
@@ -102,9 +102,9 @@ public class RegionLoader
         return _waysMap[wayId].Select(long.Parse).ToArray();
     }
 
-    public Graph.Graph? GetRegionsWay(ulong wayId)
+    public Graph.Graph? GetRegionsFromWayId(ulong wayId)
     {
-        long[]? regionIds = GetRegionIdsWay(wayId);
+        long[]? regionIds = GetRegionIdsFromWayId(wayId);
         if (regionIds is null) return null;
 
         Graph.Graph g = new ();
