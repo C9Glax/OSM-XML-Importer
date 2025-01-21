@@ -66,8 +66,10 @@ public class OSMFileSplitter(float regionSize, string? nodesDirectory = null, st
         
         DateTime log = DateTime.Now;
         DateTime start = DateTime.Now;
+        long? startPos = null;
         while (reader.ReadToFollowing("node"))
         {
+            startPos ??= mapData.Position;
             string? id = reader.GetAttribute("id");
             string? lat = reader.GetAttribute("lat");
             string? lon = reader.GetAttribute("lon");
@@ -83,7 +85,7 @@ public class OSMFileSplitter(float regionSize, string? nodesDirectory = null, st
             string map = $"{id}-{regionFileStream}\n";
             nodesMapFileStream.Write(Encoding.ASCII.GetBytes(map));
             if(DateTime.Now.Subtract(log) > _logInterval){
-                float finished = mapData.Position * 1f / mapData.Length;
+                float finished = (float)(mapData.Position  - startPos.Value) / (mapData.Length - startPos.Value);
                 TimeSpan elapsed = DateTime.Now.Subtract(start);
                 TimeSpan remaining = elapsed / finished * (1 - finished);
                 _logger?.LogDebug($"{finished:P} {elapsed:hh\\:mm\\:ss} elapsed {remaining:hh\\:mm\\:ss} remaining ({mapData.Position:N0}/{mapData.Length:N0} bytes)");
@@ -127,8 +129,10 @@ public class OSMFileSplitter(float regionSize, string? nodesDirectory = null, st
         
         DateTime log = DateTime.Now;
         DateTime start = DateTime.Now;
+        long? startPos = null;
         while (reader.ReadToFollowing("way"))
         {
+            startPos ??= mapData.Position;
             string? id = reader.GetAttribute("id");
             if(id is null)
                 continue;
@@ -178,7 +182,7 @@ public class OSMFileSplitter(float regionSize, string? nodesDirectory = null, st
             waysMapFileStream.Write(Encoding.ASCII.GetBytes(map));
             
             if(DateTime.Now.Subtract(log) > _logInterval){
-                float finished = mapData.Position * 1f / mapData.Length;
+                float finished = (float)(mapData.Position  - startPos.Value) / (mapData.Length - startPos.Value);
                 TimeSpan elapsed = DateTime.Now.Subtract(start);
                 TimeSpan remaining = elapsed / finished * (1 - finished);
                 _logger?.LogDebug($"{finished:P} {elapsed:hh\\:mm\\:ss} elapsed {remaining:hh\\:mm\\:ss} remaining ({mapData.Position:N0}/{mapData.Length:N0} bytes)");
