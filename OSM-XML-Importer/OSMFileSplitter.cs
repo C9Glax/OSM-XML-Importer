@@ -65,11 +65,12 @@ public class OSMFileSplitter(float regionSize, string? nodesDirectory = null, st
         reader.MoveToContent();
         
         DateTime? log = null;
-        DateTime start = DateTime.Now;
+        DateTime? start = null;
         long? startPos = null;
         while (reader.ReadToFollowing("node"))
         {
             startPos ??= mapData.Position;
+            start ??= DateTime.Now;
             string? id = reader.GetAttribute("id");
             string? lat = reader.GetAttribute("lat");
             string? lon = reader.GetAttribute("lon");
@@ -87,7 +88,7 @@ public class OSMFileSplitter(float regionSize, string? nodesDirectory = null, st
             log ??= DateTime.Now;
             if(DateTime.Now.Subtract(log.Value) > _logInterval){
                 float finished = (float)(mapData.Position  - startPos.Value) / (mapData.Length - startPos.Value);
-                TimeSpan elapsed = DateTime.Now.Subtract(start);
+                TimeSpan elapsed = DateTime.Now.Subtract(start.Value);
                 TimeSpan remaining = elapsed / finished * (1 - finished);
                 _logger?.LogDebug($"{finished:P} {elapsed:hh\\:mm\\:ss} elapsed {remaining:hh\\:mm\\:ss} remaining ({mapData.Position - startPos.Value:N0}/{mapData.Length - startPos.Value:N0} bytes)");
                 log = DateTime.Now;
@@ -129,11 +130,12 @@ public class OSMFileSplitter(float regionSize, string? nodesDirectory = null, st
         reader.MoveToContent();
         
         DateTime? log = null;
-        DateTime start = DateTime.Now;
+        DateTime? start = null;
         long? startPos = null;
         while (reader.ReadToFollowing("way"))
         {
             startPos ??= mapData.Position;
+            start ??= DateTime.Now;
             string? id = reader.GetAttribute("id");
             if(id is null)
                 continue;
@@ -185,7 +187,7 @@ public class OSMFileSplitter(float regionSize, string? nodesDirectory = null, st
             log ??= DateTime.Now;
             if(DateTime.Now.Subtract(log.Value) > _logInterval){
                 float finished = (float)(mapData.Position - startPos.Value) / (mapData.Length - startPos.Value);
-                TimeSpan elapsed = DateTime.Now.Subtract(start);
+                TimeSpan elapsed = DateTime.Now.Subtract(start.Value);
                 TimeSpan remaining = elapsed / finished * (1 - finished);
                 _logger?.LogDebug($"{finished:P} {elapsed:hh\\:mm\\:ss} elapsed {remaining:hh\\:mm\\:ss} remaining ({mapData.Position - startPos.Value:N0}/{mapData.Length - startPos.Value:N0} bytes)");
                 log = DateTime.Now;
