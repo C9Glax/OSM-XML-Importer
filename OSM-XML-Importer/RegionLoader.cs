@@ -1,4 +1,5 @@
-﻿using Graph;
+﻿using System.Globalization;
+using Graph;
 using Microsoft.Extensions.Logging;
 
 namespace OSM_XML_Importer;
@@ -6,10 +7,14 @@ namespace OSM_XML_Importer;
 public class RegionLoader
 {
     
-    private string NodesMapFile => Path.Join(_nodesDirectory, _regionSize.ToString(), "NodesMapFile");
-    private string WaysMapFile => Path.Join(_waysDirectory, _regionSize.ToString(), "WaysMapFile");
-    private string NodesDirectory => Path.Join(_nodesDirectory, _regionSize.ToString(), "nodes");
-    private string WaysDirectory => Path.Join(_waysDirectory, _regionSize.ToString(), "ways");
+    private static readonly NumberFormatInfo Ni = new()
+    {
+        NumberDecimalSeparator = "."
+    };
+    private string NodesMapFile => Path.Join(_nodesDirectory, _regionSize.ToString(Ni), "NodesMapFile");
+    private string WaysMapFile => Path.Join(_waysDirectory, _regionSize.ToString(Ni), "WaysMapFile");
+    private string NodesDirectory => Path.Join(_nodesDirectory, _regionSize.ToString(Ni), "nodes");
+    private string WaysDirectory => Path.Join(_waysDirectory, _regionSize.ToString(Ni), "ways");
     private string _nodesDirectory, _waysDirectory;
     private ILogger? _logger;
     private float _regionSize;
@@ -17,12 +22,11 @@ public class RegionLoader
     private Dictionary<ulong, string> _nodesMap;
     private Dictionary<ulong, string[]> _waysMap;
     
-    public RegionLoader(float regionSize, string? nodesDirectory = null, string? waysDirectory = null,
-        ILogger? logger = null)
+    public RegionLoader(float regionSize, string nodesDirectory, string waysDirectory, ILogger? logger = null)
     {
         _logger = logger;
-        this._nodesDirectory = nodesDirectory ?? Environment.CurrentDirectory;
-        this._waysDirectory = waysDirectory ?? Environment.CurrentDirectory;
+        this._nodesDirectory = nodesDirectory;
+        this._waysDirectory = waysDirectory;
 
         this._regionSize = regionSize;
         
@@ -35,7 +39,7 @@ public class RegionLoader
     private Dictionary<ulong, string> GetNodeIdMap()
     {
         if (!File.Exists(NodesMapFile))
-            throw new FileNotFoundException("NodesMap not found");
+            throw new FileNotFoundException($"NodesMap not found {NodesMapFile}");
         Dictionary<ulong, string> ret = new();
         using (FileStream f = new(NodesMapFile, FileMode.Open, FileAccess.Read))
         {
@@ -59,7 +63,7 @@ public class RegionLoader
     private Dictionary<ulong, string[]> GetWaysMap()
     {
         if (!File.Exists(WaysMapFile))
-            throw new FileNotFoundException("WaysMap not found");
+            throw new FileNotFoundException($"WaysMap not found {WaysMapFile}");
         Dictionary<ulong, string[]> ret = new();
         using (FileStream f = new(WaysMapFile, FileMode.Open, FileAccess.Read))
         {

@@ -31,14 +31,15 @@ public static class Program
         o.CleanBakFiles();
         
         
-        RegionLoader r = new (regionSize, logger: logger);
+        //TODO RegionLoader r = new (regionSize, logger: logger);
 
+        /*
         float lat = 48.793347f;
         float lon = 9.832301f;
         long regionId = RegionUtils.GetRegionId(lat, lon, regionSize);
         Graph.Graph g = r.GetRegion(regionId);
         KeyValuePair<ulong, Node> node = g.ClosestNodeToCoordinates(lat, lon);
-        logger.LogInformation($"{lat} {lon} -> Region {regionId} Closest Node: {node}");
+        logger.LogInformation($"{lat} {lon} -> Region {regionId} Closest Node: {node}");*/
     }
 
     private static void PrintUsage(TextWriter textWriter)
