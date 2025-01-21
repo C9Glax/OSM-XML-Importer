@@ -141,7 +141,7 @@ public class RegionLoader
                     string[] split = line.Split('-');
                     if (split.Length != 3)
                         continue;
-                    g.Nodes.Add(ulong.Parse(split[0]), new Node(float.Parse(split[1]), float.Parse(split[2])));
+                    g.Nodes.Add(ulong.Parse(split[0]), new Node(float.Parse(split[1], NumberStyles.Float, NumberFormatInfo.InvariantInfo), float.Parse(split[2], NumberStyles.Float, NumberFormatInfo.InvariantInfo)));
                 }
             }
         }
