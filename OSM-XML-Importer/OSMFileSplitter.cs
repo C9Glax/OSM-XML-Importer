@@ -1,10 +1,11 @@
-﻿using System.Text;
+﻿using System.Globalization;
+using System.Text;
 using System.Xml;
 using Microsoft.Extensions.Logging;
 
 namespace OSM_XML_Importer;
 
-public class OSMFileSplitter
+public class OSMFileSplitter(float regionSize, string? nodesDirectory = null, string? waysDirectory = null, ILogger? logger = null)
 {
     
     /*
@@ -18,26 +19,21 @@ public class OSMFileSplitter
         IgnoreWhitespace = true,
         IgnoreComments = true
     };
-    
-    private string NodesMapFile => Path.Join(_nodesDirectory, _regionSize.ToString(), "NodesMapFile");
-    private string WaysMapFile => Path.Join(_waysDirectory, _regionSize.ToString(), "WaysMapFile");
-    private string NodesDirectory => Path.Join(_nodesDirectory, _regionSize.ToString(), "nodes");
-    private string WaysDirectory => Path.Join(_waysDirectory, _regionSize.ToString(), "ways");
-    private string _nodesDirectory, _waysDirectory;
-    private ILogger? _logger;
-    private float _regionSize;
-    private TimeSpan LogInterval = TimeSpan.FromSeconds(3);
 
-    public OSMFileSplitter(float regionSize, string? nodesDirectory = null,
-        string? waysDirectory = null, ILogger? logger = null)
+    private static readonly NumberFormatInfo Ni = new()
     {
-        _logger = logger;
-        this._nodesDirectory = nodesDirectory ?? Environment.CurrentDirectory;
-        this._waysDirectory = waysDirectory ?? Environment.CurrentDirectory;
-
-        this._regionSize = regionSize;
-        
-    }
+        NumberDecimalSeparator = "."
+    };
+    
+    private string NodesMapFile => Path.Join(_nodesDirectory, _regionSize.ToString(Ni), "NodesMapFile");
+    private string WaysMapFile => Path.Join(_waysDirectory, _regionSize.ToString(Ni), "WaysMapFile");
+    private string NodesDirectory => Path.Join(_nodesDirectory, _regionSize.ToString(Ni), "nodes");
+    private string WaysDirectory => Path.Join(_waysDirectory, _regionSize.ToString(Ni), "ways");
+    private readonly string _nodesDirectory = nodesDirectory ?? Environment.CurrentDirectory;
+    private readonly string _waysDirectory = waysDirectory ?? Environment.CurrentDirectory;
+    private readonly ILogger? _logger = logger;
+    private readonly float _regionSize = regionSize;
+    private readonly TimeSpan _logInterval = TimeSpan.FromSeconds(3);
 
     public void SplitFileIntoRegions(string filePath, bool filterHighways = false, ILogger? logger = null)
     {
@@ -86,7 +82,7 @@ public class OSMFileSplitter
             //nodeId-{regionId}\n
             string map = $"{id}-{regionFileStream}\n";
             nodesMapFileStream.Write(Encoding.ASCII.GetBytes(map));
-            if(DateTime.Now.Subtract(log) > LogInterval){
+            if(DateTime.Now.Subtract(log) > _logInterval){
                 float finished = mapData.Position * 1f / mapData.Length;
                 TimeSpan elapsed = DateTime.Now.Subtract(start);
                 TimeSpan remaining = elapsed / finished * (1 - finished);
@@ -181,7 +177,7 @@ public class OSMFileSplitter
             string map = $"{id}-{string.Join(',', regionIds)}\n";
             waysMapFileStream.Write(Encoding.ASCII.GetBytes(map));
             
-            if(DateTime.Now.Subtract(log) > LogInterval){
+            if(DateTime.Now.Subtract(log) > _logInterval){
                 float finished = mapData.Position * 1f / mapData.Length;
                 TimeSpan elapsed = DateTime.Now.Subtract(start);
                 TimeSpan remaining = elapsed / finished * (1 - finished);
