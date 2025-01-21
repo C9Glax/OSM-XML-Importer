@@ -86,7 +86,7 @@ public class OSMFileSplitter(float regionSize, string? nodesDirectory = null, st
                 float finished = mapData.Position * 1f / mapData.Length;
                 TimeSpan elapsed = DateTime.Now.Subtract(start);
                 TimeSpan remaining = elapsed / finished * (1 - finished);
-                _logger?.LogDebug($"{finished:P} {elapsed:hh\\:mm\\:ss} elapsed {remaining:hh\\:mm\\:ss} remaining ({mapData.Position}/{mapData.Length})");
+                _logger?.LogDebug($"{finished:P} {elapsed:hh\\:mm\\:ss} elapsed {remaining:hh\\:mm\\:ss} remaining ({mapData.Position:N0}/{mapData.Length:N0} bytes)");
                 log = DateTime.Now;
             }
             _logger?.LogTrace($"{line} -> {regionFileStream} = {Path.Join(NodesDirectory, regionFileStream.ToString())}");
@@ -181,7 +181,7 @@ public class OSMFileSplitter(float regionSize, string? nodesDirectory = null, st
                 float finished = mapData.Position * 1f / mapData.Length;
                 TimeSpan elapsed = DateTime.Now.Subtract(start);
                 TimeSpan remaining = elapsed / finished * (1 - finished);
-                _logger?.LogDebug($"{finished:P} {elapsed:hh\\:mm\\:ss} elapsed {remaining:hh\\:mm\\:ss} remaining ({mapData.Position}/{mapData.Length})");
+                _logger?.LogDebug($"{finished:P} {elapsed:hh\\:mm\\:ss} elapsed {remaining:hh\\:mm\\:ss} remaining ({mapData.Position:N0}/{mapData.Length:N0} bytes)");
                 log = DateTime.Now;
             }
         }
