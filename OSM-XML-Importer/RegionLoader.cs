@@ -1,4 +1,4 @@
-﻿using GeoGraph;
+﻿using Graph;
 using Microsoft.Extensions.Logging;
 
 namespace OSM_XML_Importer;
@@ -80,86 +80,51 @@ public class RegionLoader
         return ret;
     }
 
-    public Node? GetNode(ulong nodeId)
+    public long? GetRegionIdNode(ulong nodeId)
     {
         if (!_nodesMap.ContainsKey(nodeId))
             return null;
-
-        using FileStream fs = File.OpenRead(Path.Join(NodesDirectory, _nodesMap[nodeId]));
-        using StreamReader sr = new(fs);
-        while (!sr.EndOfStream)
-        {
-            string? line = sr.ReadLine();
-            if (line is null)
-                continue;
-            //ID-Latitude-Longitude\n
-            string[] split = line.Split('-');
-            if (split.Length != 3)
-                continue;
-            if(ulong.Parse(split[0]) != nodeId)
-                continue;
-            
-            return new Node(split[1], split[2]);
-        }
-        return null;
+        return long.Parse(_nodesMap[nodeId]);
     }
 
-    public Graph? GetRegionNode(ulong nodeId)
+    public Graph.Graph? GetRegionNode(ulong nodeId)
     {
-        if (!_nodesMap.ContainsKey(nodeId))
-            return null;
-
-        return GetRegion(long.Parse(_nodesMap[nodeId]));
+        long? regionId = GetRegionIdNode(nodeId);
+        if (regionId is null) return null;
+        return GetRegion((long)regionId);
     }
 
-    public Way? GetWay(ulong wayId)
+    public long[]? GetRegionIdsWay(ulong wayId)
     {
         if (!_waysMap.ContainsKey(wayId))
             return null;
 
-        using FileStream fs = File.OpenRead(Path.Join(WaysDirectory, _waysMap[wayId][0]));
-        using StreamReader sr = new(fs);
-        while (!sr.EndOfStream)
-        {
-            string? line = sr.ReadLine();
-            if (line is null)
-                continue;
-            //ID-{nodeId,}+-{tagkey@tagvalue,}+\n
-            string[] split = line.Split('-');
-            if (split.Length != 3)
-                continue;
-            if(ulong.Parse(split[0]) != wayId)
-                continue;
-
-            return new Way(split[1].Split(',').Select(idStr => ulong.Parse(idStr)).ToList(),
-                split[2].Split(',').Select(tagStr => tagStr.Split('@')).ToDictionary(x => x[0], x => x[1]));
-        }
-        
-        
-        return null;
+        return _waysMap[wayId].Select(long.Parse).ToArray();
     }
 
-    public Graph? GetRegionsWay(ulong wayId)
+    public Graph.Graph? GetRegionsWay(ulong wayId)
     {
-        if (!_waysMap.ContainsKey(wayId))
-            return null;
+        long[]? regionIds = GetRegionIdsWay(wayId);
+        if (regionIds is null) return null;
 
-        Graph g = new ();
+        Graph.Graph g = new ();
 
-        foreach (string region in _waysMap[wayId])
-            g.ConcatGraph(GetRegion(long.Parse(region)));
+        foreach (long regionId in regionIds)
+            g.ConcatGraph(GetRegion(regionId));
 
         return g;
     }
 
-    public Graph GetRegion(long regionId)
+    public Graph.Graph GetRegion(long regionId)
     {
         string nodePath = Path.Join(NodesDirectory, regionId.ToString());
         string wayPath = Path.Join(WaysDirectory, regionId.ToString());
         if (!File.Exists(nodePath) || !File.Exists(wayPath))
             throw new FileNotFoundException($"Region not found {regionId}");
 
-        Graph g = new();
+
+        List<Node> nodes = new();
+        Graph.Graph g = new();
         using (FileStream nfs = new(nodePath, FileMode.Open, FileAccess.Read))
         {
             using (StreamReader nsr = new(nfs))
@@ -173,7 +138,7 @@ public class RegionLoader
                     string[] split = line.Split('-');
                     if (split.Length != 3)
                         continue;
-                    g.AddNode(ulong.Parse(split[0]), new Node(split[1], split[2]));
+                    g.Nodes.Add(ulong.Parse(split[0]), new Node(float.Parse(split[1]), float.Parse(split[2])));
                 }
             }
         }
@@ -191,12 +156,20 @@ public class RegionLoader
                     string[] split = line.Split('-');
                     if (split.Length != 3)
                         continue;
-                    g.AddWay(new Way(split[1].Split(',').Select(idStr => ulong.Parse(idStr)).ToList(),
-                        split[2].Split(',').Select(tagStr => tagStr.Split('@')).ToDictionary(x => x[0], x => x[1])));
+                    ulong wayId = ulong.Parse(split[0]);
+                    Way way = new (split[2].Split(',').Select(tagStr => tagStr.Split('@'))
+                        .ToDictionary(x => x[0], x => x[1]));
+                    g.Ways.Add(wayId, way);
+                    ulong nodeId;
+                    ulong[] nodeIds = split[1].Split(',').Select(ulong.Parse).ToArray();
+                    for (int i = 0; i < nodeIds.Length - 1; i++)
+                    {
+                        if(g.Nodes.ContainsKey(nodeIds[i]) && g.Nodes.ContainsKey(nodeIds[i + 1]))
+                            g.Nodes[nodeIds[i]].Neighbors.Add(nodeIds[i+1], new(wayId, way.Tags.TryGetValue("forward", out string? fwd) && bool.Parse(fwd)));
+                    }
                 }
             }
         }
-        g.RecalculateIntersections();
         return g;
     }
 }

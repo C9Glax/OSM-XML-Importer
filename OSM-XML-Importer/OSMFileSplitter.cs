@@ -1,5 +1,4 @@
-﻿using System.Globalization;
-using System.Text;
+﻿using System.Text;
 using System.Xml;
 using Microsoft.Extensions.Logging;
 
@@ -39,11 +38,11 @@ public class OSMFileSplitter
         
     }
 
-    public void SplitFileIntoRegions(string? filePath = null, bool filterHighways = false, ILogger? logger = null)
+    public void SplitFileIntoRegions(string filePath, bool filterHighways = false, ILogger? logger = null)
     {
         _logger?.LogInformation($"Input: {filePath} Output-Nodes: {NodesDirectory} Output-Ways: {WaysDirectory}");
         _logger?.LogDebug("Opening File...");
-        Stream mapData = filePath is not null && File.Exists(filePath) ? new FileStream(filePath, FileMode.Open, FileAccess.Read) : new MemoryStream(OSM_Data.map);
+        Stream mapData = new FileStream(filePath, FileMode.Open, FileAccess.Read);
 
         Nodes(mapData);
         Ways(mapData, filterHighways);
