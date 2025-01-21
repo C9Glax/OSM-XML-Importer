@@ -167,7 +167,7 @@ public class RegionLoader
                     for (int i = 0; i < nodeIds.Length - 1; i++)
                     {
                         if(g.Nodes.ContainsKey(nodeIds[i]) && g.Nodes.ContainsKey(nodeIds[i + 1]))
-                            g.Nodes[nodeIds[i]].Neighbors.Add(nodeIds[i+1], new(wayId, way.Tags.TryGetValue("forward", out string? fwd) && bool.Parse(fwd)));
+                            g.Nodes[nodeIds[i]].Neighbors.TryAdd(nodeIds[i+1], new(wayId, way.Tags.TryGetValue("forward", out string? fwd) && bool.Parse(fwd)));
                     }
                 }
             }
