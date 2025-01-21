@@ -10,15 +10,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Reference Include="Graph">
-      <HintPath>..\..\OSM_Graph\OSM_Graph\bin\Debug\net9.0\Graph.dll</HintPath>
-    </Reference>
-    <Reference Include="OSM_Graph">
-      <HintPath>..\..\OSM_Graph\OSM_Graph\bin\Debug\net9.0\OSM_Graph.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="GlaxLogger" Version="1.0.7.2" />
     <PackageReference Include="Microsoft.Extensions.Logging" Version="8.0.0" />
   </ItemGroup>
@@ -27,6 +18,15 @@
     <None Update="Resources\map.osm">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Graph">
+      <HintPath>..\..\OSM_Graph\OSM_Graph\bin\Debug\net9.0\Graph.dll</HintPath>
+    </Reference>
+    <Reference Include="OSM_Graph">
+      <HintPath>..\..\OSM_Graph\OSM_Graph\bin\Debug\net9.0\OSM_Graph.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
 </Project>
