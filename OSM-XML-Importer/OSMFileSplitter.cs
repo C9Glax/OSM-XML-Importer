@@ -64,7 +64,7 @@ public class OSMFileSplitter(float regionSize, string? nodesDirectory = null, st
         XmlReader reader = XmlReader.Create(mapData, ReaderSettings);
         reader.MoveToContent();
         
-        DateTime log = DateTime.Now;
+        DateTime? log = null;
         DateTime start = DateTime.Now;
         long? startPos = null;
         while (reader.ReadToFollowing("node"))
@@ -84,11 +84,12 @@ public class OSMFileSplitter(float regionSize, string? nodesDirectory = null, st
             //nodeId-{regionId}\n
             string map = $"{id}-{regionFileStream}\n";
             nodesMapFileStream.Write(Encoding.ASCII.GetBytes(map));
-            if(DateTime.Now.Subtract(log) > _logInterval){
+            log ??= DateTime.Now;
+            if(DateTime.Now.Subtract(log.Value) > _logInterval){
                 float finished = (float)(mapData.Position  - startPos.Value) / (mapData.Length - startPos.Value);
                 TimeSpan elapsed = DateTime.Now.Subtract(start);
                 TimeSpan remaining = elapsed / finished * (1 - finished);
-                _logger?.LogDebug($"{finished:P} {elapsed:hh\\:mm\\:ss} elapsed {remaining:hh\\:mm\\:ss} remaining ({mapData.Position:N0}/{mapData.Length:N0} bytes)");
+                _logger?.LogDebug($"{finished:P} {elapsed:hh\\:mm\\:ss} elapsed {remaining:hh\\:mm\\:ss} remaining ({mapData.Position - startPos.Value:N0}/{mapData.Length - startPos.Value:N0} bytes)");
                 log = DateTime.Now;
             }
             _logger?.LogTrace($"{line} -> {regionFileStream} = {Path.Join(NodesDirectory, regionFileStream.ToString())}");
@@ -127,7 +128,7 @@ public class OSMFileSplitter(float regionSize, string? nodesDirectory = null, st
         XmlReader reader = XmlReader.Create(mapData, ReaderSettings);
         reader.MoveToContent();
         
-        DateTime log = DateTime.Now;
+        DateTime? log = null;
         DateTime start = DateTime.Now;
         long? startPos = null;
         while (reader.ReadToFollowing("way"))
@@ -181,11 +182,12 @@ public class OSMFileSplitter(float regionSize, string? nodesDirectory = null, st
             string map = $"{id}-{string.Join(',', regionIds)}\n";
             waysMapFileStream.Write(Encoding.ASCII.GetBytes(map));
             
-            if(DateTime.Now.Subtract(log) > _logInterval){
-                float finished = (float)(mapData.Position  - startPos.Value) / (mapData.Length - startPos.Value);
+            log ??= DateTime.Now;
+            if(DateTime.Now.Subtract(log.Value) > _logInterval){
+                float finished = (float)(mapData.Position - startPos.Value) / (mapData.Length - startPos.Value);
                 TimeSpan elapsed = DateTime.Now.Subtract(start);
                 TimeSpan remaining = elapsed / finished * (1 - finished);
-                _logger?.LogDebug($"{finished:P} {elapsed:hh\\:mm\\:ss} elapsed {remaining:hh\\:mm\\:ss} remaining ({mapData.Position:N0}/{mapData.Length:N0} bytes)");
+                _logger?.LogDebug($"{finished:P} {elapsed:hh\\:mm\\:ss} elapsed {remaining:hh\\:mm\\:ss} remaining ({mapData.Position - startPos.Value:N0}/{mapData.Length - startPos.Value:N0} bytes)");
                 log = DateTime.Now;
             }
         }
