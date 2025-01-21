@@ -259,7 +259,7 @@ public class OSMFileSplitter(float regionSize, string? nodesDirectory = null, st
                     }
                 }
             }
-            _logger?.LogDebug($"Region {regionId}\n" +
+            _logger?.LogTrace($"Region {regionId}\n" +
                               $"\tIds:\t{string.Join("\n\t\t", nodeIds)}");
             
             File.Copy(nodeRegionFile, $"{nodeRegionFile}.bak", true);

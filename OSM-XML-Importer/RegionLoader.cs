@@ -122,9 +122,7 @@ public class RegionLoader
         string wayPath = Path.Join(WaysDirectory, regionId.ToString());
         if (!File.Exists(nodePath) || !File.Exists(wayPath))
             throw new FileNotFoundException($"Region not found {regionId}");
-
-
-        List<Node> nodes = new();
+        
         Graph.Graph g = new();
         using (FileStream nfs = new(nodePath, FileMode.Open, FileAccess.Read))
         {
@@ -161,7 +159,6 @@ public class RegionLoader
                     Way way = new (split[2].Split(',').Select(tagStr => tagStr.Split('@'))
                         .ToDictionary(x => x[0], x => x[1]));
                     g.Ways.Add(wayId, way);
-                    ulong nodeId;
                     ulong[] nodeIds = split[1].Split(',').Select(ulong.Parse).ToArray();
                     for (int i = 0; i < nodeIds.Length - 1; i++)
                     {
