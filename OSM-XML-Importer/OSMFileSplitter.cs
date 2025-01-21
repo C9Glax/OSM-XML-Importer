@@ -234,6 +234,9 @@ public class OSMFileSplitter(float regionSize, string? nodesDirectory = null, st
         string newNodesMapFile = $"{NodesMapFile}.new";
         FileStream nodesMapFileStream = new(newNodesMapFile, FileMode.Create, FileAccess.Write);
         
+        DateTime? log = null;
+        DateTime start = DateTime.Now;
+        int i = 0;
         foreach (string region in regionFiles)
         {
             FileInfo fi = new (region);
@@ -307,6 +310,17 @@ public class OSMFileSplitter(float regionSize, string? nodesDirectory = null, st
                     nodesMap.Remove(nodeId);
                 }
             }
+            
+            log ??= DateTime.Now;
+            if(DateTime.Now.Subtract(log.Value) > _logInterval){
+                float finished = (float)i / (regionFiles.Length);
+                TimeSpan elapsed = DateTime.Now.Subtract(start);
+                TimeSpan remaining = elapsed / finished * (1 - finished);
+                _logger?.LogDebug($"{finished:P} {elapsed:hh\\:mm\\:ss} elapsed {remaining:hh\\:mm\\:ss} remaining ({i:N0}/{regionFiles.Length:N0} files)");
+                log = DateTime.Now;
+            }
+
+            i++;
         }
         nodesMapFileStream.Close();
         File.Move(newNodesMapFile, NodesMapFile, true);
