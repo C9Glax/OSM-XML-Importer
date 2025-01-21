@@ -82,30 +82,31 @@ public class RegionLoader
 
     public long? GetRegionIdFromNodeId(ulong nodeId)
     {
-        if (!_nodesMap.ContainsKey(nodeId))
+        if (!_nodesMap.TryGetValue(nodeId, out string? value))
             return null;
-        return long.Parse(_nodesMap[nodeId]);
+        return long.Parse(value);
     }
 
     public Graph.Graph? GetRegionFromNodeId(ulong nodeId)
     {
         long? regionId = GetRegionIdFromNodeId(nodeId);
-        if (regionId is null) return null;
+        if (regionId is null)
+            return null;
         return GetRegion((long)regionId);
     }
 
     public long[]? GetRegionIdsFromWayId(ulong wayId)
     {
-        if (!_waysMap.ContainsKey(wayId))
+        if (!_waysMap.TryGetValue(wayId, out string[]? value))
             return null;
-
-        return _waysMap[wayId].Select(long.Parse).ToArray();
+        return value.Select(long.Parse).ToArray();
     }
 
     public Graph.Graph? GetRegionsFromWayId(ulong wayId)
     {
         long[]? regionIds = GetRegionIdsFromWayId(wayId);
-        if (regionIds is null) return null;
+        if (regionIds is null)
+            return null;
 
         Graph.Graph g = new ();
 

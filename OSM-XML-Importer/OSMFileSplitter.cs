@@ -26,6 +26,7 @@ public class OSMFileSplitter
     private string _nodesDirectory, _waysDirectory;
     private ILogger? _logger;
     private float _regionSize;
+    private TimeSpan LogInterval = TimeSpan.FromSeconds(3);
 
     public OSMFileSplitter(float regionSize, string? nodesDirectory = null,
         string? waysDirectory = null, ILogger? logger = null)
@@ -44,19 +45,20 @@ public class OSMFileSplitter
         _logger?.LogDebug("Opening File...");
         Stream mapData = new FileStream(filePath, FileMode.Open, FileAccess.Read);
 
-        Nodes(mapData);
-        Ways(mapData, filterHighways);
-        CleanUnusedNodes();
+        ValueTuple<int, ulong> numRegionsAndNodes = Nodes(mapData);
+        Ways(mapData, numRegionsAndNodes, filterHighways);
+        CleanUnusedNodes(numRegionsAndNodes.Item2);
     }
     
     /*
      * Node-File format
      * ID-Latitude-Longitude\n
      */
-    private void Nodes(Stream mapData)
+    private ValueTuple<int, ulong> Nodes(Stream mapData)
     {
         _logger?.LogDebug("Splitting Nodes...");
         Dictionary<long, FileStream> nodesRegionFileStreams = new();
+        ulong numNodes = 0;
 
         if (!Directory.Exists(NodesDirectory))
             Directory.CreateDirectory(NodesDirectory);
@@ -66,6 +68,8 @@ public class OSMFileSplitter
         XmlReader reader = XmlReader.Create(mapData, ReaderSettings);
         reader.MoveToContent();
         
+        DateTime log = DateTime.Now;
+        DateTime start = DateTime.Now;
         while (reader.ReadToFollowing("node"))
         {
             string? id = reader.GetAttribute("id");
@@ -82,11 +86,20 @@ public class OSMFileSplitter
             //nodeId-{regionId}\n
             string map = $"{id}-{regionFileStream}\n";
             nodesMapFileStream.Write(Encoding.ASCII.GetBytes(map));
+            if(DateTime.Now.Subtract(log) > LogInterval){
+                float finished = mapData.Position * 1f / mapData.Length;
+                TimeSpan elapsed = DateTime.Now.Subtract(start);
+                TimeSpan remaining = elapsed / finished * (1 - finished);
+                _logger?.LogDebug($"{finished:P} {elapsed:hh\\:mm\\:ss} elapsed {remaining:hh\\:mm\\:ss} remaining ({mapData.Position}/{mapData.Length})");
+                log = DateTime.Now;
+            }
             _logger?.LogTrace($"{line} -> {regionFileStream} = {Path.Join(NodesDirectory, regionFileStream.ToString())}");
         }
         foreach(FileStream fs in nodesRegionFileStreams.Values)
             fs.Close();
         nodesMapFileStream.Close();
+
+        return new(nodesRegionFileStreams.Count, numNodes);
     }
 
     private long GetRegionFileStream(string lat, string lon, ref Dictionary<long, FileStream> nodesRegionFileStreams)
@@ -102,26 +115,28 @@ public class OSMFileSplitter
      * Way-File format
      * ID-{nodeId,}+-{tagkey@tagvalue,}+\n
      */
-    private void Ways(Stream mapData, bool filterToHighways = false)
+    private void Ways(Stream mapData, ValueTuple<int, ulong> numRegionsAndNodes, bool filterToHighways = false)
     {
         _logger?.LogDebug("Splitting Ways...");
-        Dictionary<string, FileStream> waysRegionFileStreams = new();
+        Dictionary<long, FileStream> waysRegionFileStreams = new((int)(numRegionsAndNodes.Item1 * 1.2));
         
         if (!Directory.Exists(WaysDirectory))
             Directory.CreateDirectory(WaysDirectory);
         
         FileStream waysMapFileStream = new(WaysMapFile, FileMode.Create, FileAccess.Write);
-        Dictionary<string, string> nodeIdMap = GetNodeIdMap();
+        Dictionary<ulong, long> nodeIdMap = GetNodeIdMapRegionId(numRegionsAndNodes.Item2);
         mapData.Position = 0;
         XmlReader reader = XmlReader.Create(mapData, ReaderSettings);
         reader.MoveToContent();
         
+        DateTime log = DateTime.Now;
+        DateTime start = DateTime.Now;
         while (reader.ReadToFollowing("way"))
         {
             string? id = reader.GetAttribute("id");
             if(id is null)
                 continue;
-            List<string> nodeIds = new();
+            List<ulong> nodeIds = new();
             Dictionary<string, string> tags = new();
             tags.Add("id", id);
             using (XmlReader wayReader = reader.ReadSubtree())
@@ -141,7 +156,7 @@ public class OSMFileSplitter
                         string? nodeId = reader.GetAttribute("ref");
                         if(nodeId is null)
                             continue;
-                        nodeIds.Add(nodeId);
+                        nodeIds.Add(ulong.Parse(nodeId));
                     }
                 }
             }
@@ -152,28 +167,36 @@ public class OSMFileSplitter
             
             //ID-{nodeId,}+-{tagkey@tagvalue,}+\n
             string line = $"{id}-{string.Join(',',nodeIds)}-{string.Join(',', tags.Select(t => $"{t.Key}@{t.Value}".Replace(",", ";").Replace("-","=")))}\n";
-            List<string> regionIds = nodeIds.Select(nId => nodeIdMap[nId]).Distinct().ToList();
-            foreach (string regionId in regionIds)
+            List<long> regionIds = nodeIds.Select(nId => nodeIdMap[nId]).Distinct().ToList();
+            foreach (long regionId in regionIds)
             {
                 if(!waysRegionFileStreams.ContainsKey(regionId))
-                    waysRegionFileStreams.Add(regionId, new FileStream(Path.Join(WaysDirectory, regionId), FileMode.Create, FileAccess.Write));
+                    waysRegionFileStreams.Add(regionId, new FileStream(Path.Join(WaysDirectory, regionId.ToString()), FileMode.Create, FileAccess.Write));
                 FileStream f = waysRegionFileStreams[regionId];
                 f.Write(Encoding.UTF8.GetBytes(line));
-                _logger?.LogTrace($"{line} -> {regionId} = {Path.Join(WaysDirectory, regionId)}");
+                _logger?.LogTrace($"{line} -> {regionId} = {Path.Join(WaysDirectory, regionId.ToString())}");
             }
             
             //wayId-{regionId,}+\n
             string map = $"{id}-{string.Join(',', regionIds)}\n";
             waysMapFileStream.Write(Encoding.ASCII.GetBytes(map));
+            
+            if(DateTime.Now.Subtract(log) > LogInterval){
+                float finished = mapData.Position * 1f / mapData.Length;
+                TimeSpan elapsed = DateTime.Now.Subtract(start);
+                TimeSpan remaining = elapsed / finished * (1 - finished);
+                _logger?.LogDebug($"{finished:P} {elapsed:hh\\:mm\\:ss} elapsed {remaining:hh\\:mm\\:ss} remaining ({mapData.Position}/{mapData.Length})");
+                log = DateTime.Now;
+            }
         }
         foreach(FileStream fs in waysRegionFileStreams.Values)
             fs.Close();
         waysMapFileStream.Close();
     }
 
-    private Dictionary<string, string> GetNodeIdMap()
+    private Dictionary<ulong, long> GetNodeIdMapRegionId(ulong numNodes = 1024)
     {
-        Dictionary<string, string> ret = new();
+        Dictionary<ulong, long> ret = new((int)(numNodes * 1.2));
         using (FileStream f = new(NodesMapFile, FileMode.Open, FileAccess.Read))
         {
             using (StreamReader s = new(f))
@@ -186,7 +209,7 @@ public class OSMFileSplitter
                     string[] split = line.Split('-');
                     if(split.Length != 2)
                         continue;
-                    ret.Add(split[0], split[1]);
+                    ret.Add(ulong.Parse(split[0]), long.Parse(split[1]));
                 }
             }
         }
@@ -197,13 +220,13 @@ public class OSMFileSplitter
      * If we filtered to highways, not all nodes will be used
      * Also 
      */
-    private void CleanUnusedNodes()
+    private void CleanUnusedNodes(ulong numNodes = 1024)
     {
         _logger?.LogInformation("Removing unnecessary nodes from regions...");
         string[] regionFiles = Directory.GetFiles(WaysDirectory);
         
         File.Copy(NodesMapFile, $"{NodesMapFile}.bak", true);
-        Dictionary<string, string> nodesMap = GetNodeIdMap();
+        Dictionary<ulong, long> nodesMap = GetNodeIdMapRegionId();
         string newNodesMapFile = $"{NodesMapFile}.new";
         FileStream nodesMapFileStream = new(newNodesMapFile, FileMode.Create, FileAccess.Write);
         
@@ -216,7 +239,7 @@ public class OSMFileSplitter
             if(!File.Exists(nodeRegionFile))
                 continue;
             
-            HashSet<string> nodeIds = new(); //All the nodeIds in the region of the way
+            HashSet<ulong> nodeIds = new((int)(numNodes * 1.2)); //All the nodeIds in the region of the way
             using (FileStream fs = new (region, FileMode.Open, FileAccess.Read))
             {
                 using (StreamReader sr = new(fs))
@@ -232,7 +255,7 @@ public class OSMFileSplitter
                             continue;
                         string[] ids = split[1].Split(',');
                         foreach (string id in ids)
-                            nodeIds.Add(id);
+                            nodeIds.Add(ulong.Parse(id));
                     }
                 }
             }
@@ -257,7 +280,7 @@ public class OSMFileSplitter
                             if(split.Length != 3)
                                 continue;
                             string id = split[0];
-                            if(nodeIds.Contains(id))
+                            if(nodeIds.Contains(ulong.Parse(id)))
                                 fsn.Write(Encoding.ASCII.GetBytes($"{line}\n"));
                             else
                                 _logger?.LogTrace($"Region {regionId} removed Node {id}");
@@ -270,7 +293,7 @@ public class OSMFileSplitter
             else
                 File.Delete(newNodeFile);
 
-            foreach (string nodeId in nodeIds)
+            foreach (ulong nodeId in nodeIds)
             {
                 if (nodesMap.ContainsKey(nodeId))
                 {
